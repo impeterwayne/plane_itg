@@ -37,24 +37,17 @@ function runJson(cmd, args, opts = {}) {
 }
 
 async function runTests() {
-  process.stdout.write('\n=== Plane-ITG Self-Test Suite ===\n\n');
+  process.stdout.write('\n=== Plane-ITG Pure CLI Self-Test Suite ===\n\n');
 
   // 1. Syntax Validation
   process.stdout.write('▶ 1. JavaScript Syntax Verification\n');
   const jsFiles = [
     'bin/cli.js',
     'bin/plane.js',
-    'bin/popup.js',
-    'lib/actions.js',
-    'lib/app.js',
     'lib/context.js',
     'lib/gitx.js',
-    'lib/herdr.js',
-    'lib/icons.js',
     'lib/plane.js',
-    'lib/tui.js',
-    'lib/views.js',
-    'lib/winmouse.js',
+    'scripts/self-test.js',
     'test/self-test.js',
   ];
 
@@ -72,38 +65,28 @@ async function runTests() {
     }
   }
 
-  // 2. Manifest & Config Files
-  process.stdout.write('\n▶ 2. Plugin Manifest & Examples\n');
-  const manifestPath = path.join(rootDir, 'herdr-plugin.toml');
-  assert(fs.existsSync(manifestPath), 'herdr-plugin.toml exists');
-  const manifest = fs.readFileSync(manifestPath, 'utf8');
-  assert(manifest.includes('id = "plane-popup"'), 'plane-popup pane declared');
-  assert(manifest.includes('placement = "popup"'), 'plane-popup has placement = popup');
-  assert(manifest.includes('id = "tool-plane"'), 'tool-plane action declared');
-  assert(manifest.includes('id = "plane-sync"'), 'plane-sync action declared');
-
-  const configExPath = path.join(rootDir, 'config.example.toml');
-  assert(fs.existsSync(configExPath), 'config.example.toml exists');
-  const configEx = fs.readFileSync(configExPath, 'utf8');
-  assert(configEx.includes('plane-itg.tool-plane'), 'config.example.toml defines tool-plane binding');
-
-  // 3. CLI Entrypoints & Dry-Run
-  process.stdout.write('\n▶ 3. CLI Entrypoints & Dry-Run Support\n');
+  // 2. CLI Entrypoints & Dry-Run Support
+  process.stdout.write('\n▶ 2. Pure CLI Entrypoints & Dry-Run Support\n');
   const cliJs = path.join(rootDir, 'bin', 'cli.js');
-  const popupJs = path.join(rootDir, 'bin', 'popup.js');
 
-  const popupDry = runJson(process.execPath, [popupJs, '--dry-run']);
-  assert(popupDry.action === 'open', 'popup --dry-run reports action = open');
-  assert(popupDry.entrypoint === 'plane-popup', 'popup --dry-run targets plane-popup');
+  const cliHelpRes = spawnSync(process.execPath, [cliJs, '--help'], { encoding: 'utf8' });
+  assert(cliHelpRes.status === 0 && cliHelpRes.stdout.includes('plane-itg'), 'cli --help displays usage');
 
-  const cliTuiDry = runJson(process.execPath, [cliJs, 'tui', '--dry-run']);
-  assert(cliTuiDry.command === 'tui', 'cli tui --dry-run reports command = tui');
-  assert(cliTuiDry.dryRun === true, 'cli tui reports dryRun = true');
+  const cliVerRes = spawnSync(process.execPath, [cliJs, '--version'], { encoding: 'utf8' });
+  assert(cliVerRes.status === 0 && cliVerRes.stdout.startsWith('v'), 'cli --version displays version');
 
   const cliSyncDry = runJson(process.execPath, [cliJs, 'sync', '--dry-run', '--categories', 'backlog,todo']);
   assert(cliSyncDry.command === 'sync', 'cli sync --dry-run reports command = sync');
   assert(cliSyncDry.categories.includes('backlog'), 'cli sync parsed categories backlog');
   assert(cliSyncDry.categories.includes('todo'), 'cli sync parsed categories todo');
+
+  const cliIssuesDry = runJson(process.execPath, [cliJs, 'issues', 'login', '--dry-run']);
+  assert(cliIssuesDry.command === 'issues', 'cli issues --dry-run reports command = issues');
+  assert(cliIssuesDry.query === 'login', 'cli issues parsed query');
+
+  const cliProjectsDry = runJson(process.execPath, [cliJs, 'projects', 'mobile', '--dry-run']);
+  assert(cliProjectsDry.command === 'projects', 'cli projects --dry-run reports command = projects');
+  assert(cliProjectsDry.query === 'mobile', 'cli projects parsed query');
 
   const cliAuthDry = runJson(process.execPath, [cliJs, 'auth', 'test_key', '--dry-run']);
   assert(cliAuthDry.command === 'auth', 'cli auth --dry-run reports command = auth');
@@ -116,11 +99,14 @@ async function runTests() {
   assert(cliConfigDry.command === 'config', 'cli config --dry-run reports command = config');
   assert(cliConfigDry.baseUrl === 'https://plane.itgproduct.com', 'cli config defaults to plane.itgproduct.com');
 
-  // 4. Core Plane Integration
-  process.stdout.write('\n▶ 4. Core Plane Integration & Configuration\n');
+  const cliOpenDry = runJson(process.execPath, [cliJs, 'open', 'DEMO-101', '--dry-run']);
+  assert(cliOpenDry.command === 'open', 'cli open --dry-run reports command = open');
+  assert(cliOpenDry.url.includes('DEMO-101'), 'cli open generated issue url');
+
+  // 3. Core Plane Integration & Configuration
+  process.stdout.write('\n▶ 3. Core Plane Integration & Configuration\n');
   const plane = require('../lib/plane');
   const context = require('../lib/context');
-  const gitx = require('../lib/gitx');
 
   assert(plane.DEFAULT_PLANE_CONFIG.baseUrl === 'https://plane.itgproduct.com', 'plane default baseUrl matches ITG');
   assert(plane.DEFAULT_PLANE_CONFIG.workspaceSlug === 'product', 'plane default workspaceSlug is product');
@@ -177,8 +163,8 @@ async function runTests() {
   assert(mediaRefs.some((m) => m.kind === 'prnt.sc' && m.mediaId === 'test1234'), 'extractMediaReferences detects prnt.sc link');
   assert(mediaRefs.some((m) => m.kind === 'streamable' && m.mediaId === 'demovid99'), 'extractMediaReferences detects streamable link');
 
-  // 5. Worktree Resolution & Multi-Worktree Linking
-  process.stdout.write('\n▶ 5. Worktree Resolution & Symlinking\n');
+  // 4. Worktree Resolution & Multi-Worktree Linking
+  process.stdout.write('\n▶ 4. Worktree Resolution & Symlinking\n');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'plane-itg-test-'));
   const parentRepo = path.join(tmpDir, 'MainRepo');
   const linkedWorktree = path.join(tmpDir, 'MainRepo.worktrees', 'FeatureWorktree');

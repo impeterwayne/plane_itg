@@ -2,9 +2,7 @@
 'use strict';
 
 const path = require('node:path');
-const fs = require('node:fs');
 const plane = require('../lib/plane');
-const { openBrowser } = require('../lib/views');
 
 const pkg = require('../package.json');
 
@@ -14,13 +12,12 @@ const jsonOutput = argv.includes('--json');
 
 function printHelp(code = 0) {
   process.stdout.write(`
-plane-itg v${pkg.version} — Plane tasks synchronizer & offline evidence crawler
+plane-itg v${pkg.version} — Pure CLI for Plane ITG task sync & offline evidence crawler
 
 Usage:
-  plane-itg [command] [options]
+  plane-itg <command> [options]
 
 Commands:
-  (default) / tui            Launch the interactive Plane TUI
   sync                       Sync Plane tasks, comments, evidence & generate TASK_LIST.md
   issues [query]             List and filter issues for the current project
   projects [query]           List available projects in Plane workspace
@@ -38,11 +35,12 @@ Options:
   --version, -V              Show version number
 
 Examples:
-  plane-itg
+  plane-itg sync
   plane-itg sync --categories backlog,todo
-  plane-itg issues login
+  plane-itg issues "login"
   plane-itg project COD
   plane-itg auth plane_api_xxx
+  plane-itg open COD-101
 \n`);
   process.exit(code);
 }
@@ -57,8 +55,12 @@ if (argv.includes('--version') || argv.includes('-V')) {
 }
 
 const nonFlags = argv.filter((a) => !a.startsWith('--'));
-const command = nonFlags[0] || 'tui';
+const command = nonFlags[0];
 const arg1 = nonFlags[1];
+
+if (!command) {
+  printHelp(0);
+}
 
 function getWorktreeTarget() {
   const wtIdx = argv.indexOf('--worktree');
@@ -81,35 +83,6 @@ async function run() {
   const cfg = plane.config(targetPath);
 
   switch (command) {
-    case 'tui': {
-      if (dryRun) {
-        process.stdout.write(
-          `${JSON.stringify({
-            command: 'tui',
-            dryRun: true,
-            targetPath,
-            configured: plane.isConfigured(cfg),
-            config: {
-              baseUrl: cfg.baseUrl,
-              workspaceSlug: cfg.workspaceSlug,
-              projectId: cfg.projectId || null,
-              hasApiKey: Boolean(cfg.apiKey),
-            },
-          })}\n`
-        );
-        return;
-      }
-      const { App, requireTTY } = require('../lib/app');
-      const { planeView } = require('../lib/views');
-      requireTTY('plane-itg');
-      new App({
-        view: planeView,
-        popup: false,
-        escapeQuits: true,
-      }).start();
-      break;
-    }
-
     case 'config': {
       const summary = {
         command: 'config',
@@ -210,16 +183,16 @@ async function run() {
     }
 
     case 'projects': {
-      if (!cfg.apiKey) {
-        process.stderr.write(`Error: Plane API key not configured. Run "plane-itg auth <api-key>"\n`);
-        process.exit(1);
-      }
-
       if (dryRun) {
         process.stdout.write(
           `${JSON.stringify({ command: 'projects', dryRun: true, query: arg1 || null })}\n`
         );
         return;
+      }
+
+      if (!cfg.apiKey) {
+        process.stderr.write(`Error: Plane API key not configured. Run "plane-itg auth <api-key>"\n`);
+        process.exit(1);
       }
 
       const allProjs = await plane.projects(cfg);
@@ -239,16 +212,16 @@ async function run() {
 
     case 'issues':
     case 'list': {
-      if (!plane.isConfigured(cfg)) {
-        process.stderr.write(`Error: Plane is not fully configured (check API key and project ID).\n`);
-        process.exit(1);
-      }
-
       if (dryRun) {
         process.stdout.write(
           `${JSON.stringify({ command: 'issues', dryRun: true, query: arg1 || null })}\n`
         );
         return;
+      }
+
+      if (!plane.isConfigured(cfg)) {
+        process.stderr.write(`Error: Plane is not fully configured (check API key and project ID).\n`);
+        process.exit(1);
       }
 
       const allIssues = await plane.issues(cfg);
@@ -280,7 +253,7 @@ async function run() {
         return;
       }
 
-      openBrowser(targetUrl);
+      plane.openBrowser(targetUrl);
       if (jsonOutput) {
         process.stdout.write(`${JSON.stringify({ opened: true, url: targetUrl })}\n`);
       } else {
