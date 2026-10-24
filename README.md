@@ -128,4 +128,4 @@ node test/self-test.js
 
 ## 📄 License
 
-MIT © Peter Wayne
+MIT © Nguyen Khac Cuong
