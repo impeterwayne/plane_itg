@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Local credentials & workspace overrides
+.plane.json
+plane.json
+.env
+.env.local
+
+# Evidence & generated cache files
+plane/raw/
+plane/evidence/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

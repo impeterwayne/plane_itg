@@ -1,0 +1,14 @@
+# Plane ITG Herdr Keybindings Example
+# Append to ~/.config/herdr/config.toml
+
+[[keys.command]]
+key = "prefix+alt+p"
+type = "plugin_action"
+command = "plane-itg.tool-plane"
+description = "Plane tasks popup"
+
+[[keys.command]]
+key = "prefix+alt+shift+s"
+type = "plugin_action"
+command = "plane-itg.plane-sync"
+description = "Plane fast sync"

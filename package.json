@@ -1,0 +1,29 @@
+{
+  "name": "plane_itg",
+  "version": "1.0.0",
+  "description": "Plane tasks synchronizer, offline evidence crawler, video keyframe extractor, and multi-worktree task manager for Plane ITG.",
+  "main": "lib/plane.js",
+  "bin": {
+    "plane-itg": "bin/cli.js",
+    "plane": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "node test/self-test.js",
+    "self-test": "node scripts/self-test.js"
+  },
+  "keywords": [
+    "plane",
+    "plane-so",
+    "tasks",
+    "issue-tracker",
+    "evidence-sync",
+    "video-keyframes",
+    "worktree",
+    "herdr"
+  ],
+  "author": "Peter Wayne",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
