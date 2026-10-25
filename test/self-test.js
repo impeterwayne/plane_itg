@@ -37,16 +37,22 @@ function runJson(cmd, args, opts = {}) {
 }
 
 async function runTests() {
-  process.stdout.write('\n=== Plane-ITG Pure CLI Self-Test Suite ===\n\n');
+  process.stdout.write('\n=== Plane TUI & CLI Self-Test Suite ===\n\n');
 
   // 1. Syntax Validation
   process.stdout.write('▶ 1. JavaScript Syntax Verification\n');
   const jsFiles = [
     'bin/cli.js',
     'bin/plane.js',
+    'lib/actions.js',
+    'lib/app.js',
     'lib/context.js',
     'lib/gitx.js',
+    'lib/icons.js',
     'lib/plane.js',
+    'lib/tui.js',
+    'lib/views.js',
+    'lib/winmouse.js',
     'scripts/self-test.js',
     'test/self-test.js',
   ];
@@ -66,14 +72,22 @@ async function runTests() {
   }
 
   // 2. CLI Entrypoints & Dry-Run Support
-  process.stdout.write('\n▶ 2. Pure CLI Entrypoints & Dry-Run Support\n');
+  process.stdout.write('\n▶ 2. TUI & CLI Entrypoints & Dry-Run Support\n');
+  const pkg = require('../package.json');
+  assert(pkg.bin && pkg.bin.plane === 'bin/cli.js' && !pkg.bin['plane-itg'], 'package.json bin exposes plane only');
   const cliJs = path.join(rootDir, 'bin', 'cli.js');
 
   const cliHelpRes = spawnSync(process.execPath, [cliJs, '--help'], { encoding: 'utf8' });
-  assert(cliHelpRes.status === 0 && cliHelpRes.stdout.includes('plane-itg'), 'cli --help displays usage');
+  assert(cliHelpRes.status === 0 && cliHelpRes.stdout.includes('plane [command]'), 'cli --help displays usage');
 
   const cliVerRes = spawnSync(process.execPath, [cliJs, '--version'], { encoding: 'utf8' });
   assert(cliVerRes.status === 0 && cliVerRes.stdout.startsWith('v'), 'cli --version displays version');
+
+  const cliDefaultDry = runJson(process.execPath, [cliJs, '--dry-run']);
+  assert(cliDefaultDry.command === 'tui' && cliDefaultDry.dryRun === true, 'default cli --dry-run launches tui');
+
+  const cliTuiDry = runJson(process.execPath, [cliJs, 'tui', '--dry-run']);
+  assert(cliTuiDry.command === 'tui' && cliTuiDry.dryRun === true, 'cli tui --dry-run reports command = tui');
 
   const cliSyncDry = runJson(process.execPath, [cliJs, 'sync', '--dry-run', '--categories', 'backlog,todo']);
   assert(cliSyncDry.command === 'sync', 'cli sync --dry-run reports command = sync');
@@ -112,8 +126,8 @@ async function runTests() {
   assert(plane.DEFAULT_PLANE_CONFIG.workspaceSlug === 'product', 'plane default workspaceSlug is product');
 
   const prevConfig = context.readConfig(plane.CONFIG_FILE);
-  const saveRes = plane.saveApiKey('plane_api_test_save_key_999');
-  assert(saveRes.ok === true && saveRes.apiKey === 'plane_api_test_save_key_999', 'plane.saveApiKey saves key');
+  const saveRes = plane.saveApiKey('\x16plane_api_test_save_key_999\r\n');
+  assert(saveRes.ok === true && saveRes.apiKey === 'plane_api_test_save_key_999', 'plane.saveApiKey strips control chars (Ctrl+V) and saves key');
 
   const testCfg = plane.config(rootDir);
   assert(testCfg.baseUrl === 'https://plane.itgproduct.com', 'resolved cfg baseUrl falls back to default');
@@ -165,7 +179,7 @@ async function runTests() {
 
   // 4. Worktree Resolution & Multi-Worktree Linking
   process.stdout.write('\n▶ 4. Worktree Resolution & Symlinking\n');
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'plane-itg-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'plane-test-'));
   const parentRepo = path.join(tmpDir, 'MainRepo');
   const linkedWorktree = path.join(tmpDir, 'MainRepo.worktrees', 'FeatureWorktree');
   fs.mkdirSync(path.join(parentRepo, '.git'), { recursive: true });
@@ -210,6 +224,32 @@ async function runTests() {
   assert(perTaskMd.includes('# DEMO-1: Task One'), 'generateTaskMD has proper title header');
   assert(perTaskMd.includes('Fix scheduled for next release'), 'generateTaskMD includes comments');
   assert(perTaskMd.includes('![shot-1](./shot-1.png)'), 'generateTaskMD links evidence images');
+
+  // 5. TUI Components & Views
+  process.stdout.write('\n▶ 5. TUI Components & Views\n');
+  const tui = require('../lib/tui');
+  const actions = require('../lib/actions');
+  const views = require('../lib/views');
+
+  const parsedKeys = tui.parseKeys(Buffer.from('\x1b[A\r'));
+  assert(parsedKeys[0] === 'up' && parsedKeys[1] === 'enter', 'tui.parseKeys parses arrow and enter keys');
+
+  const list = new tui.List([
+    { type: 'group', label: 'GROUP' },
+    { type: 'item', label: 'First Item', hint: '[1]' },
+    { type: 'item', label: 'Second Item', hint: '[2]' },
+  ]);
+  assert(list.current()?.label === 'First Item', 'tui.List selects first selectable item');
+  list.move(1);
+  assert(list.current()?.label === 'Second Item', 'tui.List.move navigates to next item');
+  const renderedLines = list.render(5, 60);
+  assert(renderedLines.length === 5, 'tui.List.render fills viewport height');
+
+  const bar = actions.layoutActions([{ key: 'enter', label: 'open' }, { key: 'escape', label: 'close' }], 60);
+  assert(bar.lines.length === actions.ACTION_ROWS && bar.hits.length === 2, 'actions.layoutActions formats footer chips');
+
+  const pv = views.planeView();
+  assert(pv.title === 'Plane ITG' && typeof pv.refresh === 'function', 'views.planeView initializes TUI view');
 
   // Cleanup tmp dir
   try {

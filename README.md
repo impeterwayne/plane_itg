@@ -1,6 +1,6 @@
 # Plane ITG (`plane_itg`)
 
-> **Pure CLI tool and Node.js client for Plane ITG: task synchronization, offline evidence crawling, video keyframe extraction, and git worktree linking.**
+> **Interactive TUI and CLI for Plane ITG: task synchronization, offline evidence crawling, video keyframe extraction, and git worktree linking.**
 
 [![Self-Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-blue.svg)]()
@@ -9,11 +9,15 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- **Pure CLI Architecture**:
-  - Fast, scriptable, and automated execution with zero TUI overhead.
-  - Machine-readable `--json` output and safe `--dry-run` simulation on all commands.
+- **Interactive Terminal TUI**:
+  - Full-screen terminal user interface with keyboard and mouse navigation.
+  - Live search filters (`/`) for tasks and projects.
+  - Interactive project switcher (`p`) and sync scope selector (`s`).
+  - Direct API key entry (`k`) with interactive terminal or native GUI prompts.
+- **Direct CLI Subcommands**:
+  - Scriptable subcommands (`sync`, `issues`, `projects`, `project`, `auth`, `open`, `config`) with `--json` output and safe `--dry-run` simulation.
 - **Evidence & Media Crawler**:
   - Downloads native Plane `<image-component>` embedded images.
   - Scrapes and archives Lightshot (`prnt.sc`) screenshots.
@@ -34,57 +38,60 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Installation
+### 1. Installation & Interactive TUI
 
 ```bash
 # Link globally
 npm link
 
-# Or run directly
-node bin/cli.js <command>
+# Launch the interactive TUI
+plane
 ```
 
 ### 2. CLI Usage
 
 ```bash
+# Launch interactive TUI explicitly
+plane tui
+
 # View active configuration and resolved project
-plane-itg config
+plane config
 
 # Save your Plane API key
-plane-itg auth plane_api_your_key_here
+plane auth plane_api_your_key_here
 
 # Browse or search available projects
-plane-itg projects
-plane-itg projects "android"
+plane projects
+plane projects "android"
 
 # Link a project ID or key to current workspace
-plane-itg project COD
+plane project COD
 
 # Synchronize all tasks and download evidence
-plane-itg sync
+plane sync
 
 # Synchronize specific categories only
-plane-itg sync --categories backlog,todo
+plane sync --categories backlog,todo
 
 # List issues directly in terminal
-plane-itg issues
-plane-itg issues "login"
+plane issues
+plane issues "login"
 
 # Open an issue or project in the default browser
-plane-itg open COD-101
+plane open COD-101
 ```
 
 All commands support `--dry-run` and `--json`:
 ```bash
-plane-itg sync --categories backlog,todo --dry-run
-plane-itg issues "login" --json
+plane sync --categories backlog,todo --dry-run
+plane issues "login" --json
 ```
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Plane ITG resolves credentials and settings in the following order:
 
@@ -114,7 +121,7 @@ Plane ITG resolves credentials and settings in the following order:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Run the automated self-test suite:
 
@@ -126,6 +133,6 @@ node test/self-test.js
 
 ---
 
-## 📄 License
+## License
 
 MIT © Nguyen Khac Cuong

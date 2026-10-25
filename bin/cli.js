@@ -12,12 +12,13 @@ const jsonOutput = argv.includes('--json');
 
 function printHelp(code = 0) {
   process.stdout.write(`
-plane-itg v${pkg.version} — Pure CLI for Plane ITG task sync & offline evidence crawler
+plane v${pkg.version} — Interactive TUI & CLI for Plane ITG task sync & offline evidence crawler
 
 Usage:
-  plane-itg <command> [options]
+  plane [command] [options]
 
 Commands:
+  (default) / tui            Launch the interactive Plane TUI
   sync                       Sync Plane tasks, comments, evidence & generate TASK_LIST.md
   issues [query]             List and filter issues for the current project
   projects [query]           List available projects in Plane workspace
@@ -35,12 +36,13 @@ Options:
   --version, -V              Show version number
 
 Examples:
-  plane-itg sync
-  plane-itg sync --categories backlog,todo
-  plane-itg issues "login"
-  plane-itg project COD
-  plane-itg auth plane_api_xxx
-  plane-itg open COD-101
+  plane
+  plane sync
+  plane sync --categories backlog,todo
+  plane issues "login"
+  plane project COD
+  plane auth plane_api_xxx
+  plane open COD-101
 \n`);
   process.exit(code);
 }
@@ -55,12 +57,8 @@ if (argv.includes('--version') || argv.includes('-V')) {
 }
 
 const nonFlags = argv.filter((a) => !a.startsWith('--'));
-const command = nonFlags[0];
+const command = nonFlags[0] || 'tui';
 const arg1 = nonFlags[1];
-
-if (!command) {
-  printHelp(0);
-}
 
 function getWorktreeTarget() {
   const wtIdx = argv.indexOf('--worktree');
@@ -83,6 +81,36 @@ async function run() {
   const cfg = plane.config(targetPath);
 
   switch (command) {
+    case 'tui': {
+      if (dryRun) {
+        process.stdout.write(
+          `${JSON.stringify({
+            command: 'tui',
+            dryRun: true,
+            targetPath,
+            configured: plane.isConfigured(cfg),
+            config: {
+              baseUrl: cfg.baseUrl,
+              workspaceSlug: cfg.workspaceSlug,
+              projectId: cfg.projectId || null,
+              hasApiKey: Boolean(cfg.apiKey),
+            },
+          })}\n`
+        );
+        return;
+      }
+      const { App, requireTTY } = require('../lib/app');
+      const { planeView } = require('../lib/views');
+      requireTTY('plane');
+      new App({
+        view: planeView,
+        cwd: targetPath,
+        popup: false,
+        escapeQuits: true,
+      }).start();
+      break;
+    }
+
     case 'config': {
       const summary = {
         command: 'config',
@@ -191,7 +219,7 @@ async function run() {
       }
 
       if (!cfg.apiKey) {
-        process.stderr.write(`Error: Plane API key not configured. Run "plane-itg auth <api-key>"\n`);
+        process.stderr.write(`Error: Plane API key not configured. Run "plane auth <api-key>"\n`);
         process.exit(1);
       }
 

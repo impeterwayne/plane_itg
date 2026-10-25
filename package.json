@@ -1,10 +1,9 @@
 {
   "name": "plane_itg",
   "version": "1.0.0",
-  "description": "Pure CLI for Plane ITG task synchronization, offline evidence crawling, video keyframe extraction, and git worktree linking.",
+  "description": "Interactive TUI and CLI for Plane ITG task synchronization, offline evidence crawling, video keyframe extraction, and git worktree linking.",
   "main": "lib/plane.js",
   "bin": {
-    "plane-itg": "bin/cli.js",
     "plane": "bin/cli.js"
   },
   "scripts": {

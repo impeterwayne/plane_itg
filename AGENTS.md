@@ -1,18 +1,17 @@
 # Agent Development Rules & Guidelines for Plane ITG
 
-Instructions and guidelines for AI coding agents maintaining and extending the `plane_itg` repository and pure CLI tool.
+Instructions and guidelines for AI coding agents maintaining and extending the `plane_itg` repository and interactive TUI / CLI tool (`plane`).
 
 ---
 
 ## 1. Feature Implementation Rules
 
-### Rule 1: Pure CLI Architecture
-- `plane_itg` is a pure CLI tool and Node.js module.
-- It does not use terminal screen alternate buffers or raw-mode TUI frameworks.
-- All commands execute synchronously or with streaming progress lines to `stdout`, and support `--json` and `--dry-run`.
+### Rule 1: Standalone TUI + CLI Architecture
+- `plane` launches the interactive Terminal User Interface (TUI) by default (`plane` or `plane tui`), while also providing direct CLI subcommands (`sync`, `issues`, `projects`, `auth`, `project`, `open`, `config`).
+- All CLI subcommands support `--json` and `--dry-run`.
 
 ### Rule 2: Support `--dry-run` on All CLI Entrypoints
-- Every command (`sync`, `issues`, `projects`, `auth`, `project`, `open`, `config`) **MUST** support the `--dry-run` flag.
+- Every command (`tui`, `sync`, `issues`, `projects`, `auth`, `project`, `open`, `config`) **MUST** support the `--dry-run` flag.
 - `--dry-run` output must be machine-readable JSON printed to `stdout` containing the resolved action and command parameters without modifying session or file state.
 
 ### Rule 3: Zero External npm Dependencies
@@ -40,6 +39,8 @@ Instructions and guidelines for AI coding agents maintaining and extending the `
 | Task | Command |
 | :--- | :--- |
 | **Run Self-Tests** | `node test/self-test.js` |
+| **Launch Interactive TUI** | `node bin/cli.js` |
+| **Launch TUI (dry-run)** | `node bin/cli.js tui --dry-run` |
 | **Sync Tasks (dry-run)** | `node bin/cli.js sync --dry-run` |
 | **List Issues (dry-run)** | `node bin/cli.js issues --dry-run` |
 | **Show Config (dry-run)** | `node bin/cli.js config --dry-run` |

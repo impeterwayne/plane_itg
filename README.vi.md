@@ -1,6 +1,6 @@
 # Plane ITG (`plane_itg`)
 
-> **Công cụ thuần CLI (Pure CLI) và thư viện Node.js cho Plane ITG: đồng bộ công việc ngoại tuyến, thu thập bằng chứng hình ảnh/video, trích xuất khung hình và liên kết git worktree.**
+> **Giao diện TUI tương tác và công cụ CLI cho Plane ITG: đồng bộ công việc ngoại tuyến, thu thập bằng chứng hình ảnh/video, trích xuất khung hình và liên kết git worktree.**
 
 [![Self-Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-blue.svg)]()
@@ -9,11 +9,15 @@
 
 ---
 
-## ✨ Tính Năng Nổi Bật
+## Tính Năng Nổi Bật
 
-- **Kiến trúc Thuần CLI (Pure CLI)**:
-  - Nhanh chóng, dễ viết kịch bản tự động hóa, không phụ thuộc vào giao diện TUI phức tạp.
-  - Hỗ trợ định dạng máy đọc `--json` và chế độ mô phỏng an toàn `--dry-run` trên tất cả các lệnh.
+- **Giao diện TUI tương tác trên Terminal**:
+  - Điều hướng trực quan bằng bàn phím và chuột ngay trên terminal.
+  - Bộ lọc tìm kiếm trực tiếp (`/`) cho công việc và dự án.
+  - Chuyển đổi dự án (`p`) và chọn phạm vi đồng bộ (`s`) nhanh chóng.
+  - Nhập API Key trực tiếp (`k`) qua terminal hoặc hộp thoại GUI.
+- **Các lệnh CLI trực tiếp**:
+  - Hỗ trợ đầy đủ các lệnh con (`sync`, `issues`, `projects`, `project`, `auth`, `open`, `config`) với đầu ra `--json` và mô phỏng `--dry-run`.
 - **Thu thập dữ liệu bằng chứng ngoại tuyến (Evidence Crawler)**:
   - Tự động tải hình ảnh đính kèm nội dung phong phú `<image-component>` của Plane.
   - Cào và lưu trữ ảnh chụp màn hình từ `prnt.sc` (Lightshot).
@@ -34,57 +38,60 @@
 
 ---
 
-## 🚀 Hướng Dẫn Sử Dụng Nhanh
+## Hướng Dẫn Sử Dụng Nhanh
 
-### 1. Cài đặt
+### 1. Cài đặt & Khởi chạy TUI
 
 ```bash
 # Liên kết toàn cục
 npm link
 
-# Hoặc chạy trực tiếp
-node bin/cli.js <command>
+# Khởi chạy giao diện TUI tương tác
+plane
 ```
 
 ### 2. Các Lệnh CLI
 
 ```bash
+# Khởi chạy giao diện TUI
+plane tui
+
 # Xem cấu hình hiện tại và dự án đã ánh xạ
-plane-itg config
+plane config
 
 # Lưu Plane API Key
-plane-itg auth plane_api_your_key_here
+plane auth plane_api_your_key_here
 
 # Xem hoặc tìm kiếm danh sách dự án
-plane-itg projects
-plane-itg projects "android"
+plane projects
+plane projects "android"
 
 # Gán ID hoặc mã dự án cho workspace hiện tại
-plane-itg project COD
+plane project COD
 
 # Đồng bộ tác vụ và tải dữ liệu bằng chứng
-plane-itg sync
+plane sync
 
 # Chỉ đồng bộ các mục Backlog và Todo
-plane-itg sync --categories backlog,todo
+plane sync --categories backlog,todo
 
 # Liệt kê các issue trực tiếp trên terminal
-plane-itg issues
-plane-itg issues "login"
+plane issues
+plane issues "login"
 
 # Mở issue trên trình duyệt web
-plane-itg open COD-101
+plane open COD-101
 ```
 
 Tất cả các lệnh đều hỗ trợ cờ `--dry-run` và `--json`:
 ```bash
-plane-itg sync --categories backlog,todo --dry-run
-plane-itg issues "login" --json
+plane sync --categories backlog,todo --dry-run
+plane issues "login" --json
 ```
 
 ---
 
-## ⚙️ Cấu Hình
+## Cấu Hình
 
 Plane ITG ưu tiên đọc cấu hình theo thứ tự sau:
 
@@ -114,7 +121,7 @@ Plane ITG ưu tiên đọc cấu hình theo thứ tự sau:
 
 ---
 
-## 🧪 Kiểm Thử Tự Động
+## Kiểm Thử Tự Động
 
 Chạy bộ kiểm thử self-test:
 
@@ -126,6 +133,6 @@ node test/self-test.js
 
 ---
 
-## 📄 Giấy Phép
+## Giấy Phép
 
-MIT © Peter Wayne
+MIT © Nguyen Khac Cuong
