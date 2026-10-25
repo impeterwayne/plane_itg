@@ -3,7 +3,6 @@
 > **Interactive TUI, CLI, and Node.js SDK for Plane ITG: task synchronization, offline evidence crawling, video keyframe extraction, and git worktree linking.**
 
 [![npm version](https://img.shields.io/npm/v/plane_itg.svg)](https://www.npmjs.com/package/plane_itg)
-[![npm downloads](https://img.shields.io/npm/dm/plane_itg.svg)](https://www.npmjs.com/package/plane_itg)
 [![Self-Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](test/self-test.js)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-blue.svg)](package.json)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-success.svg)](package.json)
