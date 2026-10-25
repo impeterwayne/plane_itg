@@ -25,6 +25,7 @@ Commands:
   project [id|key]           View or set active project ID for current workspace
   auth [api-key]             View or set Plane API key
   open [issue-id]            Open issue or project in web browser
+  ffmpeg                     Detect or automatically install portable ffmpeg
   config                     Display active resolved Plane configuration
 
 Options:
@@ -112,6 +113,7 @@ async function run() {
     }
 
     case 'config': {
+      const ff = plane.checkFfmpeg();
       const summary = {
         command: 'config',
         dryRun,
@@ -122,6 +124,7 @@ async function run() {
         projectId: cfg.projectId || null,
         apiKey: cfg.apiKey ? `${cfg.apiKey.slice(0, 10)}…` : null,
         parentRoot: cfg.parentRoot || null,
+        ffmpeg: ff,
       };
       if (jsonOutput || dryRun) {
         process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
@@ -133,9 +136,49 @@ async function run() {
         process.stdout.write(`  Workspace Slug: ${summary.workspaceSlug}\n`);
         process.stdout.write(`  Project ID:     ${summary.projectId || '(none)'}\n`);
         process.stdout.write(`  API Key:        ${summary.apiKey || '(none)'}\n`);
+        process.stdout.write(
+          `  FFmpeg:         ${ff.available ? `${ff.bin} (${ff.version})` : 'Not found (auto-installs on sync or "plane ffmpeg")'}\n`
+        );
         if (summary.parentRoot) {
           process.stdout.write(`  Workspace Root: ${summary.parentRoot}\n`);
         }
+      }
+      break;
+    }
+
+    case 'ffmpeg': {
+      const force = argv.includes('--force');
+      const status = plane.checkFfmpeg();
+      if (dryRun) {
+        process.stdout.write(
+          `${JSON.stringify({
+            command: 'ffmpeg',
+            dryRun: true,
+            force,
+            available: status.available,
+            bin: status.bin,
+            managedPath: status.managedPath,
+          })}\n`
+        );
+        return;
+      }
+      const res = await plane.ensureFfmpeg({ force }, (msg) => {
+        if (!jsonOutput) process.stdout.write(`${msg}\n`);
+      });
+      if (!res.ok) {
+        if (jsonOutput) {
+          process.stdout.write(`${JSON.stringify(res, null, 2)}\n`);
+        } else {
+          process.stderr.write(`Error: ${res.error}\n`);
+        }
+        process.exit(1);
+      }
+      if (jsonOutput) {
+        process.stdout.write(`${JSON.stringify(res, null, 2)}\n`);
+      } else {
+        process.stdout.write(
+          `✔ ffmpeg ready: ${res.bin} (${res.version})${res.installed ? ` [installed via ${res.method}]` : ''}\n`
+        );
       }
       break;
     }

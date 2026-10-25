@@ -75,6 +75,11 @@ async function runTests() {
   process.stdout.write('\n▶ 2. TUI & CLI Entrypoints & Dry-Run Support\n');
   const pkg = require('../package.json');
   assert(pkg.bin && pkg.bin.plane === 'bin/cli.js' && !pkg.bin['plane-itg'], 'package.json bin exposes plane only');
+  assert(pkg.name === 'plane_itg' && pkg.main === 'lib/plane.js', 'package.json defines name plane_itg and main entrypoint');
+  assert(Array.isArray(pkg.files) && pkg.files.includes('bin/') && pkg.files.includes('lib/'), 'package.json defines files whitelist for npm publish');
+  assert(pkg.scripts && pkg.scripts.prepublishOnly === 'node test/self-test.js', 'package.json defines prepublishOnly self-test hook');
+  assert(fs.existsSync(path.join(rootDir, 'LICENSE')), 'LICENSE file exists for npm package');
+  assert(fs.existsSync(path.join(rootDir, '.github', 'workflows', 'publish.yml')), 'GitHub Actions npm publish workflow exists');
   const cliJs = path.join(rootDir, 'bin', 'cli.js');
 
   const cliHelpRes = spawnSync(process.execPath, [cliJs, '--help'], { encoding: 'utf8' });
@@ -116,6 +121,10 @@ async function runTests() {
   const cliOpenDry = runJson(process.execPath, [cliJs, 'open', 'DEMO-101', '--dry-run']);
   assert(cliOpenDry.command === 'open', 'cli open --dry-run reports command = open');
   assert(cliOpenDry.url.includes('DEMO-101'), 'cli open generated issue url');
+
+  const cliFfmpegDry = runJson(process.execPath, [cliJs, 'ffmpeg', '--dry-run']);
+  assert(cliFfmpegDry.command === 'ffmpeg' && cliFfmpegDry.dryRun === true, 'cli ffmpeg --dry-run reports command = ffmpeg');
+  assert(typeof cliFfmpegDry.available === 'boolean', 'cli ffmpeg --dry-run reports ffmpeg availability');
 
   // 3. Core Plane Integration & Configuration
   process.stdout.write('\n▶ 3. Core Plane Integration & Configuration\n');
@@ -176,6 +185,11 @@ async function runTests() {
   assert(mediaRefs.some((m) => m.kind === 'image' && m.src.includes('screenshot.png')), 'extractMediaReferences detects <img>');
   assert(mediaRefs.some((m) => m.kind === 'prnt.sc' && m.mediaId === 'test1234'), 'extractMediaReferences detects prnt.sc link');
   assert(mediaRefs.some((m) => m.kind === 'streamable' && m.mediaId === 'demovid99'), 'extractMediaReferences detects streamable link');
+
+  const ffCheck = plane.checkFfmpeg();
+  assert(typeof ffCheck.available === 'boolean' && Boolean(ffCheck.managedPath), 'plane.checkFfmpeg returns availability and managedPath');
+  assert(typeof plane.ensureFfmpeg === 'function', 'plane.ensureFfmpeg is exported for auto-setup');
+  assert(typeof plane.sync === 'function' && typeof plane.syncProject === 'function', 'plane.sync and plane.syncProject are exported for programmatic integration');
 
   // 4. Worktree Resolution & Multi-Worktree Linking
   process.stdout.write('\n▶ 4. Worktree Resolution & Symlinking\n');
